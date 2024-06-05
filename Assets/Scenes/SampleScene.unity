@@ -3511,10 +3511,13 @@ MonoBehaviour:
   sounds:
   - name: MenuBtn
     clip: {fileID: 8300000, guid: a8b86525eed384e46b2687c9d60e1cfe, type: 3}
+    source: {fileID: 0}
   - name: Cross
     clip: {fileID: 8300000, guid: 4edfa8e0b6c66c64fa782b9e8f800a5f, type: 3}
+    source: {fileID: 0}
   - name: Circle
     clip: {fileID: 8300000, guid: fc09e6cddf7398646a20927a5b904eca, type: 3}
+    source: {fileID: 0}
 --- !u!4 &995547265
 Transform:
   m_ObjectHideFlags: 0
@@ -5701,6 +5704,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   layoutGroup: {fileID: 2095695174}
   selection: {fileID: 7716770520602200480, guid: 2345f6f12820502469a59f073e0e6812, type: 3}
+  audioManager: {fileID: 995547264}
 --- !u!212 &1732938283
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -5808,6 +5812,7 @@ MonoBehaviour:
   elementsBeforeMatch: {fileID: 1386575541}
   elementsAfterMatch: {fileID: 653584076}
   menu_btn_snd: {fileID: 8300000, guid: a8b86525eed384e46b2687c9d60e1cfe, type: 3}
+  audioManager: {fileID: 995547264}
 --- !u!114 &1763635673
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5981,6 +5986,18 @@ MonoBehaviour:
       - m_Target: {fileID: 1763635672}
         m_TargetAssemblyTypeName: UIGameController, Assembly-CSharp
         m_MethodName: RematchSelected
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1732938282}
+        m_TargetAssemblyTypeName: GridScript, Assembly-CSharp
+        m_MethodName: ChangeSelections
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

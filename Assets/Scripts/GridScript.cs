@@ -144,43 +144,12 @@ public class GridScript : MonoBehaviour
     void RestartGameState()
     {
         ClearSelectionsData();
-    }
-
-    public void RematchClicked()
-    {
-        if (!(GameManager.CurrentGameState == GameState.PLAYER1_VICTORY || GameManager.CurrentGameState == GameState.PLAYER2_VICTORY))
-        {
-            if (PLAYER_SELECTION[CROSS] == PLAYER1)
-            {
-                PLAYER_SELECTION[CROSS] = PLAYER2;
-                PLAYER_SELECTION[CIRCLE] = PLAYER1;
-
-                if (GameManager.CurrentGameMode == GameMode.PLAYERVSPLAYER)
-                {
-                    GameManager.CurrentGameState = GameState.PLAYER2_TURN;
-                }
-                else
-                    GameManager.CurrentGameState = GameState.CPU_TURN;
-
-            }
-            else
-            {
-                PLAYER_SELECTION[CROSS] = PLAYER1;
-                PLAYER_SELECTION[CIRCLE] = PLAYER2;
-
-                GameManager.CurrentGameState = GameState.PLAYER1_TURN;
-            }
-        }
-        else
-        {
-            PLAYER_SELECTION[CROSS] = PLAYER1;
-            PLAYER_SELECTION[CIRCLE] = PLAYER2;
-        }
+        StartCoroutine(ChangeSelectionsDelay());
     }
 
     IEnumerator ChangeSelectionsDelay()
     {
-        yield return null;
+        yield return new WaitForSeconds(1);
         if (!(GameManager.CurrentGameState == GameState.PLAYER1_VICTORY || GameManager.CurrentGameState == GameState.PLAYER2_VICTORY))
         {
             if (PLAYER_SELECTION[CROSS] == PLAYER1)
