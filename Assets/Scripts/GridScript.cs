@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using static StaticData;
-using static UnityEditor.PlayerSettings;
 
 public class GridScript : MonoBehaviour
 {
