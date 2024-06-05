@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using static StaticData;
+using static UnityEditor.PlayerSettings;
 
 public class GridScript : MonoBehaviour
 {
@@ -19,8 +20,11 @@ public class GridScript : MonoBehaviour
 
     public SelectionTTT selection;
 
-    public delegate void VictoryDetected(SelectionType selectionType);
+    public delegate void VictoryDetected(SelectionType selectionType, string user);
     public static event VictoryDetected OnVictoryDetected;
+
+    [SerializeField]
+    AudioManager audioManager;
 
 
     // Start is called before the first frame update
@@ -29,7 +33,7 @@ public class GridScript : MonoBehaviour
         StartCoroutine(GridSetUp());
         data = new Transform[width, height];
         OnVictoryDetected += VictorySetUp;
-        GameManager.OnChangeOnGameState += DrawSetUp;
+        GameManager.OnChangeOnGameState += ChangeGameState;
     }
 
     IEnumerator GridSetUp()
@@ -57,23 +61,28 @@ public class GridScript : MonoBehaviour
         {
             case GameState.PLAYER1_TURN:
                 selType = PLAYER_SELECTION.Where(x => x.Value == PLAYER1).Select(x => x.Key).First();
-                if (SetUpSelection(btn, selType))
+                if (SetUpSelection(btn.transform, selType))
                 {
                     if (!IsLineFormed(selType)) 
                     {
                         if (GameManager.CurrentGameState != GameState.DRAW)
-                            GameManager.CurrentGameState = GameState.PLAYER2_TURN;
+                        {
+                            if (GameManager.CurrentGameMode == GameMode.PLAYERVSPLAYER)
+                                GameManager.CurrentGameState = GameState.PLAYER2_TURN;
+                            else
+                                GameManager.CurrentGameState = GameState.CPU_TURN;
+                        }                            
                     }
                     else
                     {
-                        GameManager.CurrentGameState = GameState.PLAYER1_VICTORY;
-                        OnVictoryDetected?.Invoke(selType);
+                        GameManager.CurrentGameState = GameState.PLAYER1_GAMEWON;
+                        OnVictoryDetected?.Invoke(selType, PLAYER1);
                     }
                 }                    
                 break;
             case GameState.PLAYER2_TURN:
                 selType = PLAYER_SELECTION.Where(x => x.Value == PLAYER2).Select(x => x.Key).First();
-                if (SetUpSelection(btn, selType))
+                if (SetUpSelection(btn.transform, selType))
                 {
                     if (!IsLineFormed(selType))
                     {
@@ -82,44 +91,123 @@ public class GridScript : MonoBehaviour
                     }                        
                     else
                     {
-                        GameManager.CurrentGameState = GameState.PLAYER2_VICTORY;
-                        OnVictoryDetected?.Invoke(selType);
+                        GameManager.CurrentGameState = GameState.PLAYER2_GAMEWON;
+                        OnVictoryDetected?.Invoke(selType, PLAYER2);
                     }
                 }                  
                 break;
         }
     }
 
-    void VictorySetUp(SelectionType selectionType)
+    void VictorySetUp(SelectionType selectionType, string user)
     {
         RestartGameState();
     }
 
-    void DrawSetUp(GameState gameState)
+    void ChangeGameState(GameState gameState)
     {
-        if (gameState == GameState.DRAW) 
+        if (gameState == GameState.DRAW || gameState == GameState.PLAYER1_VICTORY || gameState == GameState.PLAYER2_VICTORY) 
         {
             RestartGameState();
+        }
+
+        if (gameState == GameState.CPU_TURN)
+        {
+            var gameManager = GameManager.instance;
+            var selType = PLAYER_SELECTION.Where(x => x.Value == PLAYER2).Select(x => x.Key).First();
+            var pos = gameManager.cpu.MakeDecision(selectionsData);
+
+            StartCoroutine(CPUDecisionDelay(pos, selType));
+        }
+    }
+
+    IEnumerator CPUDecisionDelay(Transform pos, SelectionType selType)
+    {
+        var delay = Random.Range(0.6f, 1.4f);
+        yield return new WaitForSeconds(delay);
+
+        if (SetUpSelection(pos, selType))
+        {
+            if (!IsLineFormed(selType))
+            {
+                if (GameManager.CurrentGameState != GameState.DRAW)
+                    GameManager.CurrentGameState = GameState.PLAYER1_TURN;
+            }
+            else
+            {
+                GameManager.CurrentGameState = GameState.PLAYER2_GAMEWON;
+                OnVictoryDetected?.Invoke(selType, PLAYER2);
+            }
         }
     }
 
     void RestartGameState()
     {
         ClearSelectionsData();
+    }
 
-        if (PLAYER_SELECTION[CROSS] == PLAYER1)
+    public void RematchClicked()
+    {
+        if (!(GameManager.CurrentGameState == GameState.PLAYER1_VICTORY || GameManager.CurrentGameState == GameState.PLAYER2_VICTORY))
         {
-            PLAYER_SELECTION[CROSS] = PLAYER2;
-            PLAYER_SELECTION[CIRCLE] = PLAYER1;
+            if (PLAYER_SELECTION[CROSS] == PLAYER1)
+            {
+                PLAYER_SELECTION[CROSS] = PLAYER2;
+                PLAYER_SELECTION[CIRCLE] = PLAYER1;
 
-            GameManager.CurrentGameState = GameState.PLAYER2_TURN;
+                if (GameManager.CurrentGameMode == GameMode.PLAYERVSPLAYER)
+                {
+                    GameManager.CurrentGameState = GameState.PLAYER2_TURN;
+                }
+                else
+                    GameManager.CurrentGameState = GameState.CPU_TURN;
+
+            }
+            else
+            {
+                PLAYER_SELECTION[CROSS] = PLAYER1;
+                PLAYER_SELECTION[CIRCLE] = PLAYER2;
+
+                GameManager.CurrentGameState = GameState.PLAYER1_TURN;
+            }
         }
         else
         {
             PLAYER_SELECTION[CROSS] = PLAYER1;
             PLAYER_SELECTION[CIRCLE] = PLAYER2;
+        }
+    }
 
-            GameManager.CurrentGameState = GameState.PLAYER1_TURN;
+    IEnumerator ChangeSelectionsDelay()
+    {
+        yield return null;
+        if (!(GameManager.CurrentGameState == GameState.PLAYER1_VICTORY || GameManager.CurrentGameState == GameState.PLAYER2_VICTORY))
+        {
+            if (PLAYER_SELECTION[CROSS] == PLAYER1)
+            {
+                PLAYER_SELECTION[CROSS] = PLAYER2;
+                PLAYER_SELECTION[CIRCLE] = PLAYER1;
+
+                if (GameManager.CurrentGameMode == GameMode.PLAYERVSPLAYER)
+                {
+                    GameManager.CurrentGameState = GameState.PLAYER2_TURN;
+                }
+                else
+                    GameManager.CurrentGameState = GameState.CPU_TURN;
+
+            }
+            else
+            {
+                PLAYER_SELECTION[CROSS] = PLAYER1;
+                PLAYER_SELECTION[CIRCLE] = PLAYER2;
+
+                GameManager.CurrentGameState = GameState.PLAYER1_TURN;
+            }
+        }
+        else
+        {
+            PLAYER_SELECTION[CROSS] = PLAYER1;
+            PLAYER_SELECTION[CIRCLE] = PLAYER2;
         }
     }
 
@@ -132,24 +220,40 @@ public class GridScript : MonoBehaviour
                 var pos = data[j, i];
                 if (selectionsData[pos] != null)
                 {
-                    Destroy(selectionsData[pos].gameObject);
-                    selectionsData[pos] = null;
+                    StartCoroutine(RemoveSelectionTransition(selectionsData[pos], pos));
                 }
             }
         }
     }
 
-    bool SetUpSelection(Button btn, SelectionType selectionType)
+    IEnumerator RemoveSelectionTransition(SelectionTTT selection, Transform pos)
     {
-        var dataPos = GetDataPos(btn.transform);
+        var anim = selection.GetComponent<Animator>();
+        anim.SetTrigger("RemoveSelection");
+        yield return new WaitForSeconds(0.5f);
+        Destroy(selection.gameObject);
+        selectionsData[pos] = null;
+    }
+
+    bool SetUpSelection(Transform btnTransform, SelectionType selectionType)
+    {
+        var dataPos = GetDataPos(btnTransform.transform);
 
         if (selectionsData[data[(int)dataPos.x, (int)dataPos.y]] == null)
         {
-            var plform = Instantiate(selection, btn.transform.position, Quaternion.identity);
+            var plform = Instantiate(selection, btnTransform.position, Quaternion.identity);
+            var anim = plform.GetComponent<Animator>();
+            anim.SetTrigger("AddSelection");
             plform.selectionType = selectionType;
             plform.GetComponent<SpriteRenderer>().sprite = plform.selectionList[plform.selectionType];
 
             selectionsData[data[(int)dataPos.x, (int)dataPos.y]] = plform;
+
+            if (selectionType == SelectionType.CROSS)
+                audioManager.Play(CROSS_SND);
+            else
+                audioManager.Play(CIRCLE_SND);
+
             return true;
         }
 

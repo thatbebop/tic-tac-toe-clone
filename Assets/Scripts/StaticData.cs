@@ -5,8 +5,13 @@ public class StaticData
 
     public static SelectionType CROSS = SelectionType.CROSS;
     public static SelectionType CIRCLE = SelectionType.CIRCLE;
-    public static string PLAYER1 = "player1";
-    public static string PLAYER2 = "player2";
+    public static string TITLE = "Tic Tac Toe";
+    public static string PLAYER1 = "Player 1";
+    public static string PLAYER2 = "Player 2";
+    public static int DEFAULTCONDWINS = 3;
+    public static string MENU_BTN_SND = "MenuBtn";
+    public static string CROSS_SND = "Cross";
+    public static string CIRCLE_SND = "Circle";
 
     public static Dictionary<SelectionType, string> PLAYER_SELECTION = new Dictionary<SelectionType, string> { { CROSS, PLAYER1 }, { CIRCLE, PLAYER2 } };
 
